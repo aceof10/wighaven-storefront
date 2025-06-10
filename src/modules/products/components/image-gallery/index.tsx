@@ -1,38 +1,61 @@
+"use client"
+import { useState } from "react"
+
 import { HttpTypes } from "@medusajs/types"
-import { Container } from "@medusajs/ui"
-import Image from "next/image"
+import { MainImageDisplay } from "./main-image-display"
+import { ThumbnailNavigation } from "./thumbnail-navigation"
 
 type ImageGalleryProps = {
   images: HttpTypes.StoreProductImage[]
 }
 
 const ImageGallery = ({ images }: ImageGalleryProps) => {
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [isZoomed, setIsZoomed] = useState(false)
+
+  if (!images.length) {
+    return (
+      <div className="flex items-start relative">
+        <div className="flex flex-col flex-1 small:mx-16 gap-y-4">
+          <div className="aspect-square w-full bg-ui-bg-subtle rounded-lg flex items-center justify-center">
+            <p className="text-ui-fg-muted">No images available</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const handleImageSelect = (index: number) => {
+    setSelectedImageIndex(index)
+    setIsZoomed(false)
+  }
+
+  const toggleZoom = () => {
+    setIsZoomed(!isZoomed)
+  }
+
   return (
     <div className="flex items-start relative">
       <div className="flex flex-col flex-1 small:mx-16 gap-y-4">
-        {images.map((image, index) => {
-          return (
-            <Container
-              key={image.id}
-              className="relative aspect-[29/34] w-full overflow-hidden bg-ui-bg-subtle"
-              id={image.id}
-            >
-              {!!image.url && (
-                <Image
-                  src={image.url}
-                  priority={index <= 2 ? true : false}
-                  className="absolute inset-0 rounded-rounded"
-                  alt={`Product image ${index + 1}`}
-                  fill
-                  sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-                  style={{
-                    objectFit: "cover",
-                  }}
-                />
-              )}
-            </Container>
-          )
-        })}
+        <MainImageDisplay
+          image={images[selectedImageIndex]}
+          imageIndex={selectedImageIndex}
+          isZoomed={isZoomed}
+          onToggleZoom={toggleZoom}
+        />
+
+        {images.length > 1 && (
+          <ThumbnailNavigation
+            images={images}
+            selectedIndex={selectedImageIndex}
+            onImageSelect={handleImageSelect}
+          />
+        )}
+
+        {/* Image Counter */}
+        <div className="text-center text-sm text-ui-fg-muted">
+          {selectedImageIndex + 1} / {images.length}
+        </div>
       </div>
     </div>
   )
